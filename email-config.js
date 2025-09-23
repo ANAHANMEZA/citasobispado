@@ -3,9 +3,9 @@
 
 // 🔑 Configuración de EmailJS
 const EMAILJS_CONFIG = {
-    // ⚠️ CONFIGURA TUS CREDENCIALES REALES AQUÍ
-    publicKey: 'YOUR_PUBLIC_KEY',        // ⚠️ Tu Public Key de EmailJS
-    serviceId: 'YOUR_SERVICE_ID',        // ⚠️ Tu Service ID de EmailJS  
+    // ⚠️ CONFIGURA TUS CREDENCIALES REALES AQUÍ LOCALMENTE
+    publicKey: 'YOUR_PUBLIC_KEY',        // ⚠️ Reemplazar con tu Public Key real
+    serviceId: 'YOUR_SERVICE_ID',        // ⚠️ Reemplazar con tu Service ID real
     templateId: 'template_confirmacion', // ID de la plantilla creada
     
     // Configuración del remitente (se configura en EmailJS)
