@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Obispado</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Navegación superior */
+        .admin-nav {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+        }
+
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(212, 175, 55, 0.9);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-home:hover {
+            background: var(--color-secundario);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            padding-top: 60px; /* Espacio para el botón de navegación */
+        }
+        
+        /* Estilos de Login */
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-header {
+            margin-bottom: 30px;
+        }
+        
+        .login-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .login-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 1em;
+        }
+        
+        .login-form {
+            text-align: left;
+        }
+        
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .login-form label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .login-form input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .login-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .login-footer {
+            margin-top: 20px;
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .user-info {
+            background: #e9ecef;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-right: 15px;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .btn-logout {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #c82333, #a71e2a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+        }
+        
+        .btn-logout:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+        
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .citas-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .cita-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .cita-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .cita-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .cita-id {
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .cita-estado {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .estado-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .estado-confirmada {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .estado-cancelada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .cita-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .cita-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-confirmar {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-cancelar {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-contactar {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .no-citas {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .no-citas h3 {
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .cita-header {
+                flex-direction: column;
+                align-items: start;
+            }
+            
+            .cita-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    
+    <!-- Supabase JS desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+    <!-- Navegación superior -->
+    <div class="admin-nav">
+        <a href="bienvenida.html" class="btn-home">
+            🏠 Volver al Inicio
+        </a>
+    </div>
+
+    <div class="admin-container">
+        <!-- Pantalla de Login -->
+        <div id="login-screen">
+            <div class="login-container">
+                <div class="login-header">
+                    <div class="login-icon"><img src="img/logo sud.png" width="110" height="150" alt=""></div>
+                    <h1>Panel de Administración</h1>
+                    <p>Acceso Exclusivo del Obispado</p>
+                </div>
+                
+                <form id="login-form" class="login-form">
+                    <div id="login-error" class="login-error hidden"></div>
+                    
+                    <div class="form-group">
+                        <label for="username">Usuario</label>
+                        <input type="text" id="username" name="username" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                    </div>
+                    
+                    <button type="submit" class="btn-login" id="login-btn">
+                        🔐 Iniciar Sesión
+                    </button>
+                </form>
+                
+                <div class="login-footer">
+                    <small>Sistema seguro para la gestión de citas del Obispado</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel de Administración (oculto inicialmente) -->
+        <div id="admin-panel" class="hidden">
+            <div class="admin-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h1>Panel de Administración</h1>
+                        <p>Gestión de Citas - Obispado</p>
+                    </div>
+                    <div>
+                        <span id="user-info" class="user-info">Bienvenido</span>
+                        <button onclick="cerrarSesion()" class="btn-logout">� Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        
+        <div class="stats" id="stats-container">
+            <!-- Las estadísticas se cargarán aquí -->
+        </div>
+        
+        <div class="filters">
+            <div class="form-group">
+                <label for="filtro-fecha">Filtrar por fecha</label>
+                <input type="date" id="filtro-fecha" onchange="filtrarCitas()">
+            </div>
+            
+            <div class="form-group">
+                <label for="filtro-estado">Filtrar por estado</label>
+                <select id="filtro-estado" onchange="filtrarCitas()">
+                    <option value="">Todos los estados</option>
+                    <option value="pendiente">Pendientes</option>
+                    <option value="confirmada">Confirmadas</option>
+                    <option value="cancelada">Canceladas</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="buscar-texto">Buscar por nombre</label>
+                <input type="text" id="buscar-texto" placeholder="Nombre del paciente..." oninput="filtrarCitas()">
+            </div>
+            
+            <div class="form-group">
+                <button class="btn" onclick="cargarCitas()">Actualizar</button>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <p>Cargando citas...</p>
+        </div>
+        
+            <div id="citas-container" class="citas-grid">
+                <!-- Las citas se cargarán aquí -->
+            </div>
+        </div>
+    </div>    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="supabase-functions.js"></script>
+    <script src="email-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

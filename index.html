@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Citas - Obispado</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Script de redirección a bienvenida -->
+    <script src="welcome-redirect.js"></script>
+    
+    <!-- Supabase JS desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Botón de regreso a bienvenida -->
+        <div class="header-nav">
+            <a href="bienvenida.html" class="btn-back">
+                🏠 Volver al Inicio
+            </a>
+        </div>
+
+        <header>
+            <h1>📅 Solicitar Cita Pastoral</h1>
+            <p>Complete el formulario para solicitar una audiencia con Su Obispo</p>
+        </header>
+        
+        <main>
+            <div id="welcome-screen">
+                <!-- Pantalla de bienvenida se cargará aquí -->
+            </div>
+            
+            <div id="form-container" class="hidden">
+                <!-- El formulario se agregará aquí -->
+            </div>
+            
+            <div id="confirmation" class="hidden">
+                <!-- Mensaje de confirmación se mostrará aquí -->
+            </div>
+        </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="supabase-functions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

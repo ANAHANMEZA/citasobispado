@@ -1,0 +1,19 @@
+{
+  "name": "sistema-citas-supabase",
+  "version": "1.0.0",
+  "description": "Sistema de agendamiento de citas con Supabase",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx live-server --port=3000 --open",
+    "dev": "npx live-server --port=3000 --open --watch"
+  },
+  "keywords": ["citas", "agenda", "supabase", "web"],
+  "author": "Sistema de Citas",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
