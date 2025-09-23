@@ -90,6 +90,28 @@ function createForm() {
         <form id="appointment-form" class="form fade-in">
             <div id="error-messages"></div>
             
+            <!-- Información sobre horarios disponibles -->
+            <div class="info-horarios">
+                <h3>📅 Horarios Disponibles</h3>
+                <div class="horarios-grid">
+                    <div class="horario-item">
+                        <strong>Martes - Jueves</strong>
+                        <span>20:00 - 21:00</span>
+                    </div>
+                    <div class="horario-item">
+                        <strong>Sábados</strong>
+                        <span>17:00 - 20:00</span>
+                    </div>
+                    <div class="horario-item">
+                        <strong>Domingos</strong>
+                        <span>18:00 - 20:00</span>
+                    </div>
+                </div>
+                <p class="horarios-nota">
+                    <small>* Horarios sujetos a cambios por actividades del barrio o estaca</small>
+                </p>
+            </div>
+            
             <div class="form-row">
                 <div class="form-group">
                     <label for="nombre">Nombre completo *</label>
@@ -140,32 +162,126 @@ function createForm() {
     setMinDate();
 }
 
-// Función para configurar las opciones de hora
+// Función para configurar las opciones de hora basadas en horarios disponibles
 function setupTimeOptions() {
     const horaSelect = document.getElementById('hora');
-    const horas = [
-        '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-        '12:00', '12:30', '14:00', '14:30', '15:00', '15:30',
-        '16:00', '16:30', '17:00', '17:30', '18:00'
-    ];
     
-    horas.forEach(hora => {
-        const option = document.createElement('option');
-        option.value = hora;
-        option.textContent = hora;
-        horaSelect.appendChild(option);
-    });
+    // Limpiar opciones existentes
+    while (horaSelect.children.length > 1) {
+        horaSelect.removeChild(horaSelect.lastChild);
+    }
+    
+    // Inicialmente, mostrar mensaje hasta que se seleccione una fecha
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = 'Primero selecciona una fecha';
+    placeholderOption.disabled = true;
+    horaSelect.appendChild(placeholderOption);
+    
+    // Event listener para actualizar horarios cuando cambie la fecha
+    const fechaInput = document.getElementById('fecha');
+    fechaInput.addEventListener('change', actualizarHorariosDisponibles);
 }
 
-// Función para establecer la fecha mínima (hoy)
+// Función para actualizar horarios disponibles según la fecha seleccionada
+async function actualizarHorariosDisponibles() {
+    const fechaInput = document.getElementById('fecha');
+    const horaSelect = document.getElementById('hora');
+    const fechaSeleccionada = fechaInput.value;
+    
+    // Limpiar opciones de hora
+    while (horaSelect.children.length > 1) {
+        horaSelect.removeChild(horaSelect.lastChild);
+    }
+    
+    if (!fechaSeleccionada) {
+        return;
+    }
+    
+    try {
+        // Verificar si la fecha seleccionada es válida
+        const fechaObj = new Date(fechaSeleccionada + 'T00:00:00');
+        const diaSemana = fechaObj.getDay();
+        
+        if (!esDiaDisponible(diaSemana)) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = `Los ${DIAS_SEMANA[diaSemana]}s no están disponibles`;
+            option.disabled = true;
+            horaSelect.appendChild(option);
+            return;
+        }
+        
+        // Obtener horarios disponibles para ese día
+        const horariosDelDia = obtenerHorariosDelDia(diaSemana);
+        
+        if (horariosDelDia.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No hay horarios disponibles';
+            option.disabled = true;
+            horaSelect.appendChild(option);
+            return;
+        }
+        
+        // Verificar disponibilidad de cada horario
+        for (const hora of horariosDelDia) {
+            const disponibilidad = await verificarDisponibilidad(fechaSeleccionada, hora);
+            
+            const option = document.createElement('option');
+            option.value = hora;
+            
+            if (disponibilidad.disponible) {
+                option.textContent = hora;
+            } else {
+                option.textContent = `${hora} (Ocupado)`;
+                option.disabled = true;
+            }
+            
+            horaSelect.appendChild(option);
+        }
+        
+    } catch (error) {
+        console.error('Error al actualizar horarios:', error);
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Error al cargar horarios';
+        option.disabled = true;
+        horaSelect.appendChild(option);
+    }
+}
+
+// Función para establecer la fecha mínima y máxima permitidas
 function setMinDate() {
     const fechaInput = document.getElementById('fecha');
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
+    // Fecha mínima: mañana
     const minDate = tomorrow.toISOString().split('T')[0];
     fechaInput.setAttribute('min', minDate);
+    
+    // Fecha máxima: 2 meses adelante
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 2);
+    fechaInput.setAttribute('max', maxDate.toISOString().split('T')[0]);
+    
+    // Añadir validación para días no disponibles
+    fechaInput.addEventListener('input', function() {
+        const fechaSeleccionada = this.value;
+        if (fechaSeleccionada) {
+            const fechaObj = new Date(fechaSeleccionada + 'T00:00:00');
+            const diaSemana = fechaObj.getDay();
+            
+            if (!esDiaDisponible(diaSemana)) {
+                this.setCustomValidity(`Los ${DIAS_SEMANA[diaSemana]}s no están disponibles para citas. 
+Días disponibles: Martes a Jueves (20:00-21:00), Sábados (17:00-20:00), Domingos (18:00-20:00)`);
+            } else {
+                this.setCustomValidity('');
+            }
+        }
+    });
 }
 
 // Función para configurar event listeners
@@ -380,10 +496,10 @@ async function sendAppointment(data) {
     
     try {
         // Verificar disponibilidad antes de guardar
-        const isAvailable = await verificarDisponibilidad(data.fecha, data.hora);
+        const disponibilidad = await verificarDisponibilidad(data.fecha, data.hora);
         
-        if (!isAvailable) {
-            throw new Error('Lo sentimos, ese horario ya no está disponible. Por favor, selecciona otro.');
+        if (!disponibilidad.disponible) {
+            throw new Error(disponibilidad.mensaje || 'Lo sentimos, ese horario no está disponible. Por favor, selecciona otro.');
         }
         
         // Guardar en Supabase

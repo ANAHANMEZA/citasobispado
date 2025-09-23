@@ -1,6 +1,33 @@
 // Funciones para interactuar con Supabase
 let supabaseClient = null;
 
+// =====================================================
+// CONFIGURACIÓN DE HORARIOS DISPONIBLES
+// =====================================================
+
+const HORARIOS_DISPONIBLES = {
+    // Martes (2), Miércoles (3), Jueves (4): 20:00 - 21:00
+    2: { inicio: '20:00', fin: '21:00', intervalo: 60 }, // Martes
+    3: { inicio: '20:00', fin: '21:00', intervalo: 60 }, // Miércoles  
+    4: { inicio: '20:00', fin: '21:00', intervalo: 60 }, // Jueves
+    
+    // Sábado (6): 17:00 - 20:00
+    6: { inicio: '17:00', fin: '20:00', intervalo: 30 }, // Sábado
+    
+    // Domingo (0): 18:00 - 20:00
+    0: { inicio: '18:00', fin: '20:00', intervalo: 30 }  // Domingo
+};
+
+const DIAS_SEMANA = {
+    0: 'Domingo',
+    1: 'Lunes', 
+    2: 'Martes',
+    3: 'Miércoles',
+    4: 'Jueves',
+    5: 'Viernes',
+    6: 'Sábado'
+};
+
 // Inicializar cliente de Supabase
 function initSupabase() {
     if (typeof supabase === 'undefined') {
@@ -16,6 +43,102 @@ function initSupabase() {
         console.error('Error al inicializar Supabase:', error);
         return false;
     }
+}
+
+// =====================================================
+// FUNCIONES PARA MANEJO DE HORARIOS
+// =====================================================
+
+/**
+ * Verifica si un día de la semana tiene horarios disponibles
+ */
+function esDiaDisponible(diaSemana) {
+    return HORARIOS_DISPONIBLES.hasOwnProperty(diaSemana);
+}
+
+/**
+ * Obtiene los horarios disponibles para un día específico
+ */
+function obtenerHorariosDelDia(diaSemana) {
+    if (!esDiaDisponible(diaSemana)) {
+        return [];
+    }
+    
+    const config = HORARIOS_DISPONIBLES[diaSemana];
+    const horarios = [];
+    
+    const [horaInicio, minutoInicio] = config.inicio.split(':').map(Number);
+    const [horaFin, minutoFin] = config.fin.split(':').map(Number);
+    
+    let horaActual = horaInicio * 60 + minutoInicio; // Convertir a minutos
+    const horaLimite = horaFin * 60 + minutoFin;
+    
+    while (horaActual < horaLimite) {
+        const horas = Math.floor(horaActual / 60);
+        const minutos = horaActual % 60;
+        const horaFormateada = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+        
+        horarios.push(horaFormateada);
+        horaActual += config.intervalo;
+    }
+    
+    return horarios;
+}
+
+/**
+ * Obtiene todas las fechas disponibles para los próximos N días
+ */
+function obtenerFechasDisponibles(diasAdelante = 30) {
+    const fechasDisponibles = [];
+    const hoy = new Date();
+    
+    for (let i = 1; i <= diasAdelante; i++) {
+        const fecha = new Date(hoy);
+        fecha.setDate(fecha.getDate() + i);
+        
+        const diaSemana = fecha.getDay();
+        
+        if (esDiaDisponible(diaSemana)) {
+            fechasDisponibles.push({
+                fecha: fecha.toISOString().split('T')[0], // YYYY-MM-DD
+                diaSemana: diaSemana,
+                nombreDia: DIAS_SEMANA[diaSemana],
+                horarios: obtenerHorariosDelDia(diaSemana)
+            });
+        }
+    }
+    
+    return fechasDisponibles;
+}
+
+/**
+ * Verifica si una fecha y hora específica está dentro de los horarios permitidos
+ */
+function esHorarioValido(fecha, hora) {
+    const fechaObj = new Date(fecha + 'T00:00:00');
+    const diaSemana = fechaObj.getDay();
+    
+    if (!esDiaDisponible(diaSemana)) {
+        return {
+            valido: false,
+            mensaje: `Los ${DIAS_SEMANA[diaSemana]}s no están disponibles para citas`
+        };
+    }
+    
+    const horariosPermitidos = obtenerHorariosDelDia(diaSemana);
+    
+    if (!horariosPermitidos.includes(hora)) {
+        const config = HORARIOS_DISPONIBLES[diaSemana];
+        return {
+            valido: false,
+            mensaje: `Los ${DIAS_SEMANA[diaSemana]}s solo están disponibles de ${config.inicio} a ${config.fin}`
+        };
+    }
+    
+    return {
+        valido: true,
+        mensaje: 'Horario válido'
+    };
 }
 
 // Función para guardar una cita en Supabase
@@ -256,6 +379,17 @@ async function verificarDisponibilidad(fecha, hora) {
     }
     
     try {
+        // Primero verificar si el horario está dentro de los permitidos
+        const validacionHorario = esHorarioValido(fecha, hora);
+        if (!validacionHorario.valido) {
+            return {
+                disponible: false,
+                mensaje: validacionHorario.mensaje,
+                tipoError: 'horario_no_permitido'
+            };
+        }
+        
+        // Luego verificar si ya hay una cita en ese horario
         const { data, error } = await supabaseClient
             .from(SUPABASE_CONFIG.tableName)
             .select('id')
@@ -268,11 +402,23 @@ async function verificarDisponibilidad(fecha, hora) {
         }
         
         // Si hay datos, significa que el horario ya está ocupado
-        return data.length === 0;
+        const estaDisponible = data.length === 0;
+        
+        return {
+            disponible: estaDisponible,
+            mensaje: estaDisponible ? 
+                'Horario disponible' : 
+                'Este horario ya está ocupado por otra cita',
+            tipoError: estaDisponible ? null : 'horario_ocupado'
+        };
         
     } catch (error) {
         console.error('Error al verificar disponibilidad:', error);
-        throw error;
+        return {
+            disponible: false,
+            mensaje: 'Error al verificar disponibilidad: ' + error.message,
+            tipoError: 'error_sistema'
+        };
     }
 }
 
@@ -505,4 +651,12 @@ if (typeof window !== 'undefined') {
     window.limpiarCitasVencidas = limpiarCitasVencidas;
     window.eliminarCita = eliminarCita;
     window.limpiarTodasLasCitasVencidas = limpiarTodasLasCitasVencidas;
+    
+    // Funciones de horarios
+    window.esDiaDisponible = esDiaDisponible;
+    window.obtenerHorariosDelDia = obtenerHorariosDelDia;
+    window.obtenerFechasDisponibles = obtenerFechasDisponibles;
+    window.esHorarioValido = esHorarioValido;
+    window.HORARIOS_DISPONIBLES = HORARIOS_DISPONIBLES;
+    window.DIAS_SEMANA = DIAS_SEMANA;
 }
