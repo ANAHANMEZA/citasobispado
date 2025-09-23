@@ -403,6 +403,10 @@ function crearTarjetaCita(cita) {
                 <button class="btn-small btn-contactar" onclick="enviarEmail('${cita.email}', '${cita.nombre}')">
                     Email
                 </button>
+                
+                <button class="btn-small btn-eliminar" onclick="eliminarCitaEspecifica(${cita.id})" title="Eliminar esta cita permanentemente">
+                    🗑️ Eliminar
+                </button>
             </div>
         </div>
     `;
@@ -573,6 +577,73 @@ function mostrarError(mensaje) {
             <p>${mensaje}</p>
         </div>
     `;
+}
+
+// =====================================================
+// FUNCIONES DE LIMPIEZA DE CITAS
+// =====================================================
+
+/**
+ * Función para limpiar citas vencidas con confirmación del usuario
+ */
+async function limpiarCitasVencidas() {
+    // Confirmar con el usuario
+    if (!confirm('¿Está seguro de que desea eliminar todas las citas que ya pasaron su fecha?\n\nEsta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        mostrarMensaje('Eliminando citas vencidas...', 'info');
+        
+        // Llamar a la función del módulo supabase-functions.js
+        const resultado = await window.limpiarTodasLasCitasVencidas();
+        
+        if (resultado.success) {
+            mostrarMensaje(`Se eliminaron ${resultado.count} citas vencidas correctamente`, 'success');
+            
+            // Actualizar la vista de citas
+            await cargarCitas();
+        } else {
+            throw new Error(resultado.error || 'Error al eliminar citas vencidas');
+        }
+        
+    } catch (error) {
+        console.error('Error en limpiarCitasVencidas:', error);
+        mostrarMensaje('Error al eliminar citas vencidas: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Función para eliminar una cita específica
+ */
+async function eliminarCitaEspecifica(citaId) {
+    if (!citaId) {
+        mostrarMensaje('ID de cita no válido', 'error');
+        return;
+    }
+    
+    // Confirmar con el usuario
+    if (!confirm('¿Está seguro de que desea eliminar esta cita?\n\nEsta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        // Llamar a la función del módulo supabase-functions.js
+        const resultado = await window.eliminarCita(citaId);
+        
+        if (resultado.success) {
+            mostrarMensaje('Cita eliminada correctamente', 'success');
+            
+            // Actualizar la vista de citas
+            await cargarCitas();
+        } else {
+            throw new Error(resultado.error || 'Error al eliminar la cita');
+        }
+        
+    } catch (error) {
+        console.error('Error en eliminarCitaEspecifica:', error);
+        mostrarMensaje('Error al eliminar la cita: ' + error.message, 'error');
+    }
 }
 
 // Inicializar cuando cargue la página

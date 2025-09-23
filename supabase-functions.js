@@ -69,6 +69,9 @@ async function obtenerTodasLasCitas() {
     }
     
     try {
+        // Primero, limpiar citas vencidas automáticamente
+        await limpiarCitasVencidas();
+        
         const { data, error } = await supabaseClient
             .from(SUPABASE_CONFIG.tableName)
             .select('*')
@@ -84,6 +87,85 @@ async function obtenerTodasLasCitas() {
     } catch (error) {
         console.error('Error al obtener citas:', error);
         throw error;
+    }
+}
+
+// 🗑️ Función para eliminar citas vencidas automáticamente
+async function limpiarCitasVencidas() {
+    if (!supabaseClient) {
+        throw new Error('Cliente de Supabase no inicializado');
+    }
+    
+    try {
+        // Obtener fecha actual
+        const hoy = new Date();
+        const fechaHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        
+        console.log('🗑️ Limpiando citas vencidas anteriores a:', fechaHoy);
+        
+        // Eliminar citas cuya fecha sea menor a hoy
+        const { data, error } = await supabaseClient
+            .from(SUPABASE_CONFIG.tableName)
+            .delete()
+            .lt('fecha', fechaHoy);
+        
+        if (error) {
+            console.error('Error al limpiar citas vencidas:', error);
+            return false;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`✅ ${data.length} citas vencidas eliminadas`);
+        } else {
+            console.log('✅ No hay citas vencidas que eliminar');
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error en limpiarCitasVencidas:', error);
+        return false;
+    }
+}
+
+// 🗑️ Función para eliminar citas específicas por ID
+async function eliminarCita(idCita) {
+    if (!supabaseClient) {
+        throw new Error('Cliente de Supabase no inicializado');
+    }
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from(SUPABASE_CONFIG.tableName)
+            .delete()
+            .eq('id', idCita);
+        
+        if (error) {
+            throw new Error(`Error al eliminar cita: ${error.message}`);
+        }
+        
+        console.log('✅ Cita eliminada:', idCita);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error al eliminar cita:', error);
+        throw error;
+    }
+}
+
+// 🧹 Función para limpiar manualmente todas las citas vencidas
+async function limpiarTodasLasCitasVencidas() {
+    try {
+        const resultado = await limpiarCitasVencidas();
+        if (resultado) {
+            console.log('🎯 Limpieza manual completada exitosamente');
+            return { success: true, message: 'Citas vencidas eliminadas correctamente' };
+        } else {
+            return { success: false, message: 'Error en la limpieza manual' };
+        }
+    } catch (error) {
+        console.error('❌ Error en limpieza manual:', error);
+        return { success: false, message: error.message };
     }
 }
 
@@ -403,4 +485,24 @@ function verificarPermiso(permiso) {
     // Verificar si el usuario tiene el permiso específico
     const permisos = usuario.userData.permissions || [];
     return permisos.includes(permiso) || usuario.userData.role === 'admin';
+}
+
+// =====================================================
+// EXPORTACIONES GLOBALES PARA USO EN OTROS ARCHIVOS
+// =====================================================
+if (typeof window !== 'undefined') {
+    // Funciones principales
+    window.obtenerTodasLasCitas = obtenerTodasLasCitas;
+    window.cambiarEstadoCita = cambiarEstadoCita;
+    window.crearCita = crearCita;
+    window.verificarDisponibilidad = verificarDisponibilidad;
+    window.autenticarUsuario = autenticarUsuario;
+    window.obtenerUsuarioActual = obtenerUsuarioActual;
+    window.cerrarSesion = cerrarSesion;
+    window.verificarPermiso = verificarPermiso;
+    
+    // Funciones de limpieza
+    window.limpiarCitasVencidas = limpiarCitasVencidas;
+    window.eliminarCita = eliminarCita;
+    window.limpiarTodasLasCitasVencidas = limpiarTodasLasCitasVencidas;
 }
