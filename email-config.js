@@ -376,21 +376,20 @@ async function enviarRecordatorioSemanal(emailObispo, citasDatos) {
         const templateParams = {
             // Destinatario
             to_email: emailObispo,
-            to_name: 'Su Reverencia',
+            to_name: 'Su Reverencia, Obispo',
             
             // Información del remitente
-            from_name: 'Sistema de Gestión de Citas',
-            from_email: 'sistema@obispado.com',
+            from_name: 'Sistema de Gestión de Citas - Obispado',
+            reply_to: 'sistema@obispado.com',
             
             // Contenido del recordatorio
             subject: asunto,
-            message_html: contenidoHTML,
+            message: contenidoHTML,
             
-            // Información adicional
-            week_start: semana.inicio,
-            week_end: semana.fin,
-            total_appointments: totalCitas,
-            pending_appointments: citasPendientes,
+            // Información adicional para el template
+            appointment_count: totalCitas,
+            pending_count: citasPendientes,
+            week_period: `${semana.inicio} - ${semana.fin}`,
             
             // Fecha de envío
             send_date: new Date().toLocaleDateString('es-ES', {
@@ -405,10 +404,10 @@ async function enviarRecordatorioSemanal(emailObispo, citasDatos) {
         console.log('  - Destinatario:', emailObispo);
         console.log('  - Asunto:', asunto);
         
-        // Enviar email usando template específico para recordatorio semanal
+        // Enviar email usando template estándar (el mismo que las confirmaciones)
         const response = await emailjs.send(
             credentials.serviceId,
-            'template_recordatorio_semanal', // Template específico para recordatorio
+            credentials.templateId, // Usar el mismo template que las confirmaciones
             templateParams
         );
         

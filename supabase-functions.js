@@ -887,10 +887,6 @@ if (typeof window !== 'undefined') {
     window.crearCita = guardarCitaSupabase;
     window.guardarCitaSupabase = guardarCitaSupabase;
     window.verificarDisponibilidad = verificarDisponibilidad;
-    window.autenticarUsuario = autenticarUsuario;
-    window.obtenerUsuarioActual = obtenerUsuarioActual;
-    window.cerrarSesion = cerrarSesion;
-    window.verificarPermiso = verificarPermiso;
     
     // Funciones de limpieza
     window.limpiarCitasVencidas = limpiarCitasVencidas;
