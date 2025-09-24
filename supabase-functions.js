@@ -666,6 +666,109 @@ function generarEmailSemanal(citasDatos) {
     `;
 }
 
+/**
+ * Genera HTML simplificado para usar dentro del template EmailJS
+ * (sin head, body, estilos complejos - solo el contenido)
+ */
+function generarHTMLCitasParaTemplate(citasDatos) {
+    const { citas, semana } = citasDatos;
+    
+    if (!Array.isArray(citas) || citas.length === 0) {
+        return `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <h3 style="color: #0F2A44;">📅 No hay citas programadas</h3>
+                <p>No se encontraron citas para esta semana.</p>
+            </div>
+        `;
+    }
+    
+    // Agrupar citas por día
+    const citasPorDia = {};
+    const diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    
+    citas.forEach(cita => {
+        const fecha = new Date(cita.fecha + 'T00:00:00');
+        const diaSemana = fecha.toLocaleDateString('es-ES', { weekday: 'long' });
+        const fechaFormateada = fecha.toLocaleDateString('es-ES', { 
+            day: 'numeric', 
+            month: 'long' 
+        });
+        
+        const claveDay = `${diaSemana} ${fechaFormateada}`;
+        
+        if (!citasPorDia[claveDay]) {
+            citasPorDia[claveDay] = [];
+        }
+        citasPorDia[claveDay].push(cita);
+    });
+    
+    // Generar HTML por día
+    let contenidoDias = '';
+    
+    for (const dia of diasSemana) {
+        const citasDelDia = Object.keys(citasPorDia)
+            .filter(key => key.toLowerCase().startsWith(dia))
+            .map(key => citasPorDia[key])
+            .flat();
+        
+        if (citasDelDia.length > 0) {
+            const fechaCompleta = Object.keys(citasPorDia).find(key => key.toLowerCase().startsWith(dia));
+            
+            contenidoDias += `
+                <div style="margin: 25px 0; border-left: 4px solid #0F2A44; padding-left: 20px;">
+                    <h4 style="color: #0F2A44; margin: 0 0 15px 0; font-size: 18px; text-transform: capitalize;">
+                        📅 ${fechaCompleta}
+                    </h4>
+            `;
+            
+            citasDelDia.forEach(cita => {
+                const estadoColor = {
+                    'pendiente': '#F39C12',
+                    'confirmada': '#27AE60',
+                    'cancelada': '#E74C3C'
+                }[cita.estado] || '#6C757D';
+                
+                const estadoTexto = {
+                    'pendiente': 'Pendiente',
+                    'confirmada': 'Confirmada',
+                    'cancelada': 'Cancelada'
+                }[cita.estado] || cita.estado;
+                
+                contenidoDias += `
+                    <div style="background: #f8f9fa; margin: 10px 0; padding: 15px; border-radius: 8px; border-left: 3px solid ${estadoColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong style="color: #0F2A44; font-size: 16px;">${cita.nombre}</strong>
+                            <span style="background: ${estadoColor}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                                ${estadoTexto}
+                            </span>
+                        </div>
+                        <div style="color: #666; font-size: 14px; line-height: 1.5;">
+                            <div style="margin: 5px 0;">⏰ <strong>Hora:</strong> ${cita.hora}</div>
+                            <div style="margin: 5px 0;">📞 <strong>Teléfono:</strong> ${cita.telefono}</div>
+                            <div style="margin: 5px 0;">📧 <strong>Email:</strong> ${cita.email}</div>
+                            <div style="margin: 5px 0;">💭 <strong>Motivo:</strong> ${cita.motivo}</div>
+                            ${cita.comentarios ? `<div style="margin: 5px 0;">📝 <strong>Comentarios:</strong> ${cita.comentarios}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contenidoDias += `</div>`;
+        }
+    }
+    
+    if (!contenidoDias) {
+        return `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <h3 style="color: #0F2A44;">📅 No hay citas programadas</h3>
+                <p>No se encontraron citas para esta semana.</p>
+            </div>
+        `;
+    }
+    
+    return contenidoDias;
+}
+
 // ========== FUNCIONES DE AUTENTICACIÓN CON SUPABASE ==========
 
 // Función para autenticar al obispo usando Supabase
@@ -900,4 +1003,9 @@ if (typeof window !== 'undefined') {
     window.esHorarioValido = esHorarioValido;
     window.HORARIOS_DISPONIBLES = HORARIOS_DISPONIBLES;
     window.DIAS_SEMANA = DIAS_SEMANA;
+    
+    // Funciones de recordatorio semanal
+    window.obtenerCitasSemanaActual = obtenerCitasSemanaActual;
+    window.generarEmailSemanal = generarEmailSemanal;
+    window.generarHTMLCitasParaTemplate = generarHTMLCitasParaTemplate;
 }

@@ -346,8 +346,8 @@ async function enviarRecordatorioSemanal(emailObispo, citasDatos) {
             throw new Error('Email del obispo no válido: ' + emailObispo);
         }
         
-        // Generar contenido HTML del email
-        const contenidoHTML = generarEmailSemanal(citasDatos);
+        // Generar contenido HTML simplificado para el template
+        const contenidoHTML = generarHTMLCitasParaTemplate(citasDatos);
         
         // Generar asunto dinámico
         const { semana, citas } = citasDatos;
@@ -372,7 +372,7 @@ async function enviarRecordatorioSemanal(emailObispo, citasDatos) {
         console.log('🔧 Inicializando EmailJS para recordatorio semanal...');
         emailjs.init(credentials.publicKey);
         
-        // Preparar parámetros para el template de recordatorio semanal
+        // Preparar parámetros para el template específico de recordatorio semanal
         const templateParams = {
             // Destinatario
             to_email: emailObispo,
@@ -382,32 +382,43 @@ async function enviarRecordatorioSemanal(emailObispo, citasDatos) {
             from_name: 'Sistema de Gestión de Citas - Obispado',
             reply_to: 'sistema@obispado.com',
             
-            // Contenido del recordatorio
-            subject: asunto,
-            message: contenidoHTML,
+            // Período de la semana
+            week_period: `${semana.inicio} - ${semana.fin}`,
             
-            // Información adicional para el template
+            // Estadísticas de citas
             appointment_count: totalCitas,
             pending_count: citasPendientes,
-            week_period: `${semana.inicio} - ${semana.fin}`,
+            confirmed_count: citas.filter(c => c.estado === 'confirmada').length,
+            cancelled_count: citas.filter(c => c.estado === 'cancelada').length,
+            
+            // Contenido HTML de las citas para el template
+            appointments_html: contenidoHTML,
             
             // Fecha de envío
             send_date: new Date().toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
-            })
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            
+            // Información adicional
+            current_year: new Date().getFullYear(),
+            system_name: 'Sistema de Gestión de Citas del Obispado'
         };
         
-        console.log('🔄 Enviando recordatorio semanal con EmailJS...');
+        console.log('🔄 Enviando recordatorio semanal con template específico...');
+        console.log('  - Template ID: template_keq97ur');
         console.log('  - Destinatario:', emailObispo);
-        console.log('  - Asunto:', asunto);
+        console.log('  - Período:', templateParams.week_period);
+        console.log('  - Total citas:', totalCitas);
         
-        // Enviar email usando template estándar (el mismo que las confirmaciones)
+        // Enviar email usando template específico para recordatorios semanales
         const response = await emailjs.send(
             credentials.serviceId,
-            credentials.templateId, // Usar el mismo template que las confirmaciones
+            'template_keq97ur', // Template específico para recordatorios semanales
             templateParams
         );
         
