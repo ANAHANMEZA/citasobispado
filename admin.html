@@ -364,17 +364,153 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             text-align: center;
+            border-left: 4px solid #0F2A44;
         }
         
         .stat-number {
             font-size: 2.5em;
             font-weight: bold;
-            color: #667eea;
+            color: #0F2A44;
         }
         
         .stat-label {
             color: #666;
             margin-top: 5px;
+        }
+
+        /* Panel de Recordatorio Semanal */
+        .reminder-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #D4AF37;
+        }
+        
+        .reminder-section h2 {
+            color: #0F2A44;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .reminder-config {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-weight: bold;
+            color: #0F2A44;
+        }
+        
+        .input-group input[type="email"] {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input[type="email"]:focus {
+            outline: none;
+            border-color: #D4AF37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+        
+        .reminder-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, #0F2A44 0%, #1a3a5c 100%);
+            color: white;
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+        
+        .action-btn.success {
+            background: linear-gradient(135deg, #D4AF37 0%, #b8941f 100%);
+            color: #0F2A44;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .reminder-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .reminder-preview h3 {
+            color: #0F2A44;
+            margin-bottom: 15px;
+        }
+        
+        #preview-content {
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
         }
         
         @media (max-width: 768px) {
@@ -457,7 +593,40 @@
         <div class="stats" id="stats-container">
             <!-- Las estadísticas se cargarán aquí -->
         </div>
-        
+
+        <!-- 📅 Panel de Recordatorio Semanal -->
+        <div class="admin-section reminder-section">
+            <h2>📅 Recordatorio Semanal para el Obispo</h2>
+            
+            <div class="reminder-config">
+                <div class="input-group">
+                    <label for="bishop-email">📧 Email del Obispo:</label>
+                    <input type="email" id="bishop-email" placeholder="obispo@ejemplo.com" required>
+                </div>
+                
+                <div class="reminder-actions">
+                    <button class="action-btn primary" onclick="configurarEmailObispo()">
+                        💾 Guardar Email del Obispo
+                    </button>
+                    
+                    <button class="action-btn secondary" onclick="previewRecordatorio()">
+                        👁️ Vista Previa del Recordatorio
+                    </button>
+                    
+                    <button class="action-btn success" onclick="enviarRecordatorioManual()">
+                        📤 Enviar Recordatorio Ahora
+                    </button>
+                </div>
+                
+                <div id="reminder-status" class="status-message" style="display: none;"></div>
+                
+                <div id="reminder-preview" class="reminder-preview" style="display: none;">
+                    <h3>📋 Vista Previa del Recordatorio:</h3>
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="filters">
             <div class="form-group">
                 <label for="filtro-fecha">Filtrar por fecha</label>

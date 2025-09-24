@@ -655,5 +655,154 @@ async function eliminarCitaEspecifica(citaId) {
     }
 }
 
+// =====================================================
+// 📅 FUNCIONES DE RECORDATORIO SEMANAL
+// =====================================================
+
+/**
+ * Configurar el email del obispo (guardar en localStorage)
+ */
+function configurarEmailObispo() {
+    const emailInput = document.getElementById('bishop-email');
+    const email = emailInput.value.trim();
+    
+    if (!email) {
+        mostrarStatusRecordatorio('Por favor ingrese un email válido', 'error');
+        return;
+    }
+    
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        mostrarStatusRecordatorio('Por favor ingrese un email válido', 'error');
+        return;
+    }
+    
+    // Guardar en localStorage
+    localStorage.setItem('bishop-email', email);
+    
+    mostrarStatusRecordatorio(`✅ Email del obispo guardado: ${email}`, 'success');
+    
+    console.log('📧 Email del obispo configurado:', email);
+}
+
+/**
+ * Mostrar vista previa del recordatorio semanal
+ */
+async function previewRecordatorio() {
+    try {
+        mostrarStatusRecordatorio('📅 Generando vista previa...', 'info');
+        
+        // Obtener citas de la semana
+        const citasDatos = await obtenerCitasSemanaActual();
+        
+        if (!citasDatos.success) {
+            throw new Error('Error al obtener citas: ' + citasDatos.error);
+        }
+        
+        // Generar HTML del recordatorio
+        const htmlContent = generarEmailSemanal(citasDatos);
+        
+        // Mostrar en la vista previa
+        const previewDiv = document.getElementById('reminder-preview');
+        const previewContent = document.getElementById('preview-content');
+        
+        previewContent.innerHTML = htmlContent;
+        previewDiv.style.display = 'block';
+        
+        mostrarStatusRecordatorio('📋 Vista previa generada correctamente', 'success');
+        
+    } catch (error) {
+        console.error('Error en vista previa:', error);
+        mostrarStatusRecordatorio('Error al generar vista previa: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Enviar recordatorio semanal manualmente
+ */
+async function enviarRecordatorioManual() {
+    try {
+        // Verificar email del obispo
+        const emailObispo = localStorage.getItem('bishop-email');
+        
+        if (!emailObispo) {
+            mostrarStatusRecordatorio('⚠️ Primero configure el email del obispo', 'error');
+            return;
+        }
+        
+        // Confirmar envío
+        if (!confirm(`¿Está seguro de enviar el recordatorio semanal a ${emailObispo}?`)) {
+            return;
+        }
+        
+        mostrarStatusRecordatorio('📤 Enviando recordatorio semanal...', 'info');
+        
+        // Obtener citas de la semana
+        const citasDatos = await obtenerCitasSemanaActual();
+        
+        if (!citasDatos.success) {
+            throw new Error('Error al obtener citas: ' + citasDatos.error);
+        }
+        
+        // Enviar recordatorio
+        const resultado = await enviarRecordatorioSemanal(emailObispo, citasDatos);
+        
+        if (resultado.success) {
+            const totalCitas = citasDatos.citas.length;
+            mostrarStatusRecordatorio(
+                `✅ Recordatorio enviado exitosamente a ${emailObispo} (${totalCitas} citas incluidas)`, 
+                'success'
+            );
+            
+            console.log('📧 Recordatorio semanal enviado:', resultado);
+        } else {
+            throw new Error(resultado.error || 'Error desconocido al enviar');
+        }
+        
+    } catch (error) {
+        console.error('Error enviando recordatorio:', error);
+        mostrarStatusRecordatorio('❌ Error al enviar recordatorio: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Mostrar mensaje de status para el recordatorio
+ */
+function mostrarStatusRecordatorio(mensaje, tipo = 'info') {
+    const statusDiv = document.getElementById('reminder-status');
+    
+    statusDiv.className = `status-message ${tipo}`;
+    statusDiv.textContent = mensaje;
+    statusDiv.style.display = 'block';
+    
+    // Auto-ocultar después de 5 segundos para mensajes de éxito e info
+    if (tipo === 'success' || tipo === 'info') {
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
+/**
+ * Cargar email del obispo guardado al inicializar
+ */
+function cargarConfiguracionObispo() {
+    const emailGuardado = localStorage.getItem('bishop-email');
+    if (emailGuardado) {
+        const emailInput = document.getElementById('bishop-email');
+        if (emailInput) {
+            emailInput.value = emailGuardado;
+        }
+    }
+}
+
 // Inicializar cuando cargue la página
-document.addEventListener('DOMContentLoaded', inicializarAdmin);
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarAdmin();
+    
+    // Cargar configuración del obispo después de un breve delay
+    setTimeout(() => {
+        cargarConfiguracionObispo();
+    }, 500);
+});

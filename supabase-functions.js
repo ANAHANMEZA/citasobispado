@@ -454,6 +454,218 @@ async function verificarDisponibilidad(fecha, hora) {
     }
 }
 
+// =====================================================
+// FUNCIONES PARA RECORDATORIO SEMANAL DEL OBISPO
+// =====================================================
+
+/**
+ * Obtiene todas las citas de la semana actual (lunes a domingo)
+ */
+async function obtenerCitasSemanaActual() {
+    if (!supabaseClient) {
+        throw new Error('Cliente de Supabase no inicializado');
+    }
+    
+    try {
+        // Calcular el lunes de la semana actual
+        const hoy = new Date();
+        const diaActual = hoy.getDay(); // 0 = domingo, 1 = lunes, etc.
+        const diasHastaLunes = diaActual === 0 ? 6 : diaActual - 1; // Si es domingo, retroceder 6 días
+        
+        const lunesActual = new Date(hoy);
+        lunesActual.setDate(hoy.getDate() - diasHastaLunes);
+        lunesActual.setHours(0, 0, 0, 0);
+        
+        // Calcular el domingo de la semana actual
+        const domingoActual = new Date(lunesActual);
+        domingoActual.setDate(lunesActual.getDate() + 6);
+        domingoActual.setHours(23, 59, 59, 999);
+        
+        const fechaInicio = lunesActual.toISOString().split('T')[0];
+        const fechaFin = domingoActual.toISOString().split('T')[0];
+        
+        console.log(`📅 Obteniendo citas de la semana: ${fechaInicio} a ${fechaFin}`);
+        
+        const { data, error } = await supabaseClient
+            .from(SUPABASE_CONFIG.tableName)
+            .select('*')
+            .gte('fecha', fechaInicio)
+            .lte('fecha', fechaFin)
+            .order('fecha', { ascending: true })
+            .order('hora', { ascending: true });
+        
+        if (error) {
+            throw new Error(`Error al obtener citas semanales: ${error.message}`);
+        }
+        
+        return {
+            success: true,
+            citas: data || [],
+            semana: {
+                inicio: fechaInicio,
+                fin: fechaFin,
+                lunes: lunesActual.toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })
+            }
+        };
+        
+    } catch (error) {
+        console.error('❌ Error al obtener citas semanales:', error);
+        return {
+            success: false,
+            error: error.message,
+            citas: [],
+            semana: null
+        };
+    }
+}
+
+/**
+ * Genera el contenido HTML para el email semanal del Obispo
+ */
+function generarEmailSemanal(citasDatos) {
+    const { citas, semana } = citasDatos;
+    
+    // Agrupar citas por día
+    const citasPorDia = {};
+    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    
+    citas.forEach(cita => {
+        const fecha = new Date(cita.fecha + 'T00:00:00');
+        const diaSemana = diasSemana[fecha.getDay()];
+        const fechaFormateada = fecha.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long' 
+        });
+        
+        if (!citasPorDia[diaSemana]) {
+            citasPorDia[diaSemana] = {
+                fecha: fechaFormateada,
+                citas: []
+            };
+        }
+        citasPorDia[diaSemana].citas.push(cita);
+    });
+    
+    // Contar citas por estado
+    const estadisticas = {
+        total: citas.length,
+        pendientes: citas.filter(c => c.estado === 'pendiente').length,
+        confirmadas: citas.filter(c => c.estado === 'confirmada').length,
+        canceladas: citas.filter(c => c.estado === 'cancelada').length
+    };
+    
+    let contenidoDias = '';
+    
+    // Solo mostrar días que tienen citas
+    Object.entries(citasPorDia).forEach(([dia, datos]) => {
+        contenidoDias += `
+            <div style="margin-bottom: 25px; border-left: 4px solid #0F2A44; padding-left: 15px;">
+                <h3 style="color: #0F2A44; margin: 0 0 10px 0; text-transform: capitalize; font-size: 18px;">
+                    ${datos.fecha}
+                </h3>
+                ${datos.citas.map(cita => `
+                    <div style="background: #F8F9FA; border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid #E8F4FD;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <strong style="color: #0F2A44; font-size: 16px;">${cita.nombre}</strong>
+                            <span style="background: ${cita.estado === 'confirmada' ? '#27AE60' : cita.estado === 'pendiente' ? '#F39C12' : '#E74C3C'}; 
+                                         color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; text-transform: uppercase;">
+                                ${cita.estado}
+                            </span>
+                        </div>
+                        <div style="color: #546E7A; font-size: 14px; margin-bottom: 3px;">
+                            🕐 <strong>${cita.hora}</strong> | 📞 ${cita.telefono} | 📧 ${cita.email}
+                        </div>
+                        <div style="color: #2C3E50; font-size: 14px; margin-top: 8px;">
+                            <strong>Motivo:</strong> ${cita.motivo}
+                        </div>
+                        ${cita.comentarios ? `
+                            <div style="color: #546E7A; font-size: 13px; margin-top: 5px; font-style: italic;">
+                                <strong>Comentarios:</strong> ${cita.comentarios}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    });
+    
+    if (citas.length === 0) {
+        contenidoDias = `
+            <div style="text-align: center; padding: 40px; color: #546E7A;">
+                <h3>📅 No hay citas programadas para esta semana</h3>
+                <p>Puede disfrutar de una semana más relajada para otras actividades pastorales.</p>
+            </div>
+        `;
+    }
+    
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Recordatorio Semanal - Citas del Obispado</title>
+        </head>
+        <body style="font-family: 'Source Sans Pro', Arial, sans-serif; line-height: 1.6; color: #2C3E50; margin: 0; padding: 20px; background-color: #F8F9FA;">
+            <div style="max-width: 700px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 42, 68, 0.15);">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #0F2A44 0%, #1F5582 100%); color: white; padding: 30px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700;">📅 Recordatorio Semanal</h1>
+                    <h2 style="margin: 10px 0 0 0; font-size: 18px; font-weight: 400; opacity: 0.9;">
+                        La Iglesia de Jesucristo de los Santos de los Últimos Días
+                    </h2>
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 10px; margin-top: 15px; display: inline-block;">
+                        <span style="font-size: 16px;">Semana del ${semana.lunes}</span>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas -->
+                <div style="padding: 25px; background: #E8F4FD; border-bottom: 1px solid #0F2A44;">
+                    <h3 style="margin: 0 0 15px 0; color: #0F2A44; font-size: 20px;">📊 Resumen de la Semana</h3>
+                    <div style="display: flex; justify-content: space-around; text-align: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 24px; font-weight: bold; color: #0F2A44;">${estadisticas.total}</div>
+                            <div style="font-size: 12px; color: #546E7A; text-transform: uppercase;">Total</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 24px; font-weight: bold; color: #F39C12;">${estadisticas.pendientes}</div>
+                            <div style="font-size: 12px; color: #546E7A; text-transform: uppercase;">Pendientes</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 24px; font-weight: bold; color: #27AE60;">${estadisticas.confirmadas}</div>
+                            <div style="font-size: 12px; color: #546E7A; text-transform: uppercase;">Confirmadas</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 24px; font-weight: bold; color: #E74C3C;">${estadisticas.canceladas}</div>
+                            <div style="font-size: 12px; color: #546E7A; text-transform: uppercase;">Canceladas</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contenido de citas -->
+                <div style="padding: 30px;">
+                    <h3 style="color: #0F2A44; margin: 0 0 20px 0; font-size: 22px;">🗓️ Citas de la Semana</h3>
+                    ${contenidoDias}
+                </div>
+                
+                <!-- Footer -->
+                <div style="background: #0F2A44; color: white; padding: 20px; text-align: center;">
+                    <p style="margin: 0; font-size: 14px;">
+                        Este recordatorio se envía automáticamente cada lunes.<br>
+                        Sistema de Gestión de Citas del Obispado - ${new Date().getFullYear()}
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+}
+
 // ========== FUNCIONES DE AUTENTICACIÓN CON SUPABASE ==========
 
 // Función para autenticar al obispo usando Supabase
