@@ -23,7 +23,7 @@ Para acceder al panel de administración (`admin.html`), utiliza las siguientes 
 - Cambiar estado de citas (confirmar/cancelar)
 - Estadísticas del sistema
 - Filtros y búsquedas
-- Contacto con feligreses
+- Contacto con hermanos
 
 ### ⏰ **Gestión de Sesiones**
 - **Duración**: 24 horas máximo

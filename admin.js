@@ -347,7 +347,7 @@ function crearTarjetaCita(cita) {
             
             <div class="cita-info">
                 <div class="info-group">
-                    <div class="info-label">Paciente</div>
+                    <div class="info-label">Hermano</div>
                     <div class="info-value">${cita.nombre}</div>
                 </div>
                 
@@ -396,7 +396,7 @@ function crearTarjetaCita(cita) {
                     </button>
                 ` : ''}
                 
-                <button class="btn-small btn-contactar" onclick="contactarPaciente('${cita.telefono}', '${cita.nombre}')">
+                <button class="btn-small btn-contactar" onclick="contactarHermano('${cita.telefono}', '${cita.nombre}')">
                     Llamar
                 </button>
                 
@@ -526,17 +526,17 @@ function filtrarCitas() {
     mostrarCitas();
 }
 
-// Contactar paciente por teléfono
-function contactarPaciente(telefono, nombre) {
-    if (confirm(`¿Quieres llamar a ${nombre}?`)) {
+// Contactar hermano por teléfono
+function contactarHermano(telefono, nombre) {
+    if (confirm(`¿Quieres llamar al hermano ${nombre}?`)) {
         window.open(`tel:${telefono}`);
     }
 }
 
-// Enviar email al paciente
+// Enviar email al hermano
 function enviarEmail(email, nombre) {
     const asunto = 'Confirmación de cita - Consulta profesional';
-    const mensaje = `Estimado/a ${nombre},\n\nEsperamos este mensaje le encuentre bien.\n\nPor favor, confirme su cita...\n\nSaludos cordiales.`;
+    const mensaje = `Estimado hermano/a ${nombre},\n\nEsperamos este mensaje le encuentre bien.\n\nPor favor, confirme su cita...\n\nSaludos cordiales.`;
     
     const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`;
     window.open(mailtoLink);

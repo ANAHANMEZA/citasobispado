@@ -289,7 +289,7 @@ const SUPABASE_CONFIG = {
 3. Puedes:
    - Filtrar por fecha, estado o nombre
    - Confirmar o cancelar citas
-   - Contactar pacientes por teléfono o email
+   - Contactar hermanos por teléfono o email
 
 ## 🔒 Seguridad en Producción
 

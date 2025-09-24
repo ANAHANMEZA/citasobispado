@@ -86,7 +86,7 @@ Para hacer el sistema accesible desde internet:
 
 ## 📱 Funcionalidades del Sistema
 
-### Para Feligreses (index.html)
+### Para Hermanos (index.html)
 - Formulario intuitivo para solicitar citas
 - Validación de datos en tiempo real
 - Confirmación de envío
