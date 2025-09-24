@@ -192,9 +192,7 @@ async function obtenerTodasLasCitas() {
     }
     
     try {
-        // Primero, limpiar citas vencidas automáticamente
-        await limpiarCitasVencidas();
-        
+        // Obtener todas las citas sin limpieza automática para evitar recursión
         const { data, error } = await supabaseClient
             .from(SUPABASE_CONFIG.tableName)
             .select('*')
@@ -230,24 +228,26 @@ async function limpiarCitasVencidas() {
         const { data, error } = await supabaseClient
             .from(SUPABASE_CONFIG.tableName)
             .delete()
-            .lt('fecha', fechaHoy);
+            .lt('fecha', fechaHoy)
+            .select();
         
         if (error) {
             console.error('Error al limpiar citas vencidas:', error);
-            return false;
+            return { success: false, count: 0, error: error.message };
         }
         
-        if (data && data.length > 0) {
-            console.log(`✅ ${data.length} citas vencidas eliminadas`);
+        const count = data ? data.length : 0;
+        if (count > 0) {
+            console.log(`✅ ${count} citas vencidas eliminadas`);
         } else {
             console.log('✅ No hay citas vencidas que eliminar');
         }
         
-        return true;
+        return { success: true, count: count };
         
     } catch (error) {
         console.error('❌ Error en limpiarCitasVencidas:', error);
-        return false;
+        return { success: false, count: 0, error: error.message };
     }
 }
 
@@ -261,34 +261,66 @@ async function eliminarCita(idCita) {
         const { data, error } = await supabaseClient
             .from(SUPABASE_CONFIG.tableName)
             .delete()
-            .eq('id', idCita);
+            .eq('id', idCita)
+            .select();
         
         if (error) {
-            throw new Error(`Error al eliminar cita: ${error.message}`);
+            console.error('Error al eliminar cita:', error);
+            return { success: false, error: error.message };
         }
         
-        console.log('✅ Cita eliminada:', idCita);
-        return true;
+        console.log('✅ Cita eliminada exitosamente:', idCita);
+        return { success: true, message: 'Cita eliminada correctamente' };
         
     } catch (error) {
         console.error('❌ Error al eliminar cita:', error);
-        throw error;
+        return { success: false, error: error.message };
     }
 }
 
 // 🧹 Función para limpiar manualmente todas las citas vencidas
 async function limpiarTodasLasCitasVencidas() {
+    if (!supabaseClient) {
+        throw new Error('Cliente de Supabase no inicializado');
+    }
+    
     try {
-        const resultado = await limpiarCitasVencidas();
-        if (resultado) {
-            console.log('🎯 Limpieza manual completada exitosamente');
-            return { success: true, message: 'Citas vencidas eliminadas correctamente' };
-        } else {
-            return { success: false, message: 'Error en la limpieza manual' };
+        // Obtener fecha actual
+        const hoy = new Date();
+        const fechaHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        
+        console.log('🗑️ Limpieza manual: eliminando citas anteriores a:', fechaHoy);
+        
+        // Eliminar citas cuya fecha sea menor a hoy
+        const { data, error } = await supabaseClient
+            .from(SUPABASE_CONFIG.tableName)
+            .delete()
+            .lt('fecha', fechaHoy)
+            .select(); // Necesario para obtener los datos eliminados
+        
+        if (error) {
+            console.error('Error en limpieza manual:', error);
+            return { success: false, count: 0, error: error.message };
         }
+        
+        const count = data ? data.length : 0;
+        console.log(`🎯 Limpieza manual completada: ${count} citas eliminadas`);
+        
+        return { 
+            success: true, 
+            count: count,
+            message: count > 0 ? 
+                `Se eliminaron ${count} citas vencidas correctamente` : 
+                'No se encontraron citas vencidas que eliminar'
+        };
+        
     } catch (error) {
         console.error('❌ Error en limpieza manual:', error);
-        return { success: false, message: error.message };
+        return { 
+            success: false, 
+            count: 0,
+            error: error.message 
+        };
     }
 }
 
@@ -639,7 +671,7 @@ function verificarPermiso(permiso) {
 if (typeof window !== 'undefined') {
     // Funciones principales
     window.obtenerTodasLasCitas = obtenerTodasLasCitas;
-    window.cambiarEstadoCita = cambiarEstadoCita;
+    window.cambiarEstadoCita = actualizarEstadoCita;
     window.crearCita = crearCita;
     window.verificarDisponibilidad = verificarDisponibilidad;
     window.autenticarUsuario = autenticarUsuario;
