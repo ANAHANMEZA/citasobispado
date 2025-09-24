@@ -672,7 +672,8 @@ if (typeof window !== 'undefined') {
     // Funciones principales
     window.obtenerTodasLasCitas = obtenerTodasLasCitas;
     window.cambiarEstadoCita = actualizarEstadoCita;
-    window.crearCita = crearCita;
+    window.crearCita = guardarCitaSupabase;
+    window.guardarCitaSupabase = guardarCitaSupabase;
     window.verificarDisponibilidad = verificarDisponibilidad;
     window.autenticarUsuario = autenticarUsuario;
     window.obtenerUsuarioActual = obtenerUsuarioActual;

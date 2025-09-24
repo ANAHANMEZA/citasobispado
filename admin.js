@@ -631,13 +631,22 @@ async function eliminarCitaEspecifica(citaId) {
         // Llamar a la función del módulo supabase-functions.js
         const resultado = await window.eliminarCita(citaId);
         
-        if (resultado.success) {
+        // Manejar diferentes tipos de respuesta
+        if (resultado && typeof resultado === 'object') {
+            if (resultado.success) {
+                mostrarMensaje('Cita eliminada correctamente', 'success');
+                
+                // Actualizar la vista de citas
+                await cargarCitas();
+            } else {
+                throw new Error(resultado.error || resultado.message || 'Error al eliminar la cita');
+            }
+        } else if (resultado === true) {
+            // Para compatibilidad con versiones anteriores
             mostrarMensaje('Cita eliminada correctamente', 'success');
-            
-            // Actualizar la vista de citas
             await cargarCitas();
         } else {
-            throw new Error(resultado.error || 'Error al eliminar la cita');
+            throw new Error('Respuesta inesperada del servidor');
         }
         
     } catch (error) {
