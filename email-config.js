@@ -86,14 +86,30 @@ async function enviarConEmailJS(email, asunto, datosCita) {
         console.log('🔧 Inicializando EmailJS con Public Key:', EMAILJS_CONFIG.publicKey.substring(0, 8) + '...');
         emailjs.init(EMAILJS_CONFIG.publicKey);
         
+        // Validación adicional del email
+        if (!email || email.trim() === '' || email === 'null' || email === 'undefined') {
+            throw new Error('Email del destinatario está vacío o es inválido: ' + email);
+        }
+        
         console.log('🔄 Enviando email con EmailJS...');
         console.log('  - Destinatario:', email);
         console.log('  - Asunto:', asunto);
+        console.log('  - Validación email passed:', email !== null && email !== undefined && email.trim() !== '');
         
         // Preparar parámetros para la plantilla de EmailJS
         const templateParams = {
+            // Múltiples formatos de destinatario para compatibilidad
             to_email: email,
+            email: email,
+            user_email: email,
+            recipient_email: email,
+            
+            // Nombre del destinatario
             to_name: datosCita.nombre,
+            name: datosCita.nombre,
+            user_name: datosCita.nombre,
+            
+            // Asunto del email
             subject: asunto,
             
             // Datos de la cita
@@ -101,6 +117,7 @@ async function enviarConEmailJS(email, asunto, datosCita) {
             fecha: formatearFecha(datosCita.fecha),
             hora: formatearHora(datosCita.hora),
             motivo: datosCita.motivo || 'Consulta pastoral',
+            telefono: datosCita.telefono || '',
             
             // Información adicional
             lugar: 'Oficina del Obispo - Capilla Local',
@@ -108,10 +125,16 @@ async function enviarConEmailJS(email, asunto, datosCita) {
             fecha_actual: new Date().toLocaleDateString('es-ES'),
             
             // Datos del remitente
-            from_name: EMAILJS_CONFIG.fromName
+            from_name: EMAILJS_CONFIG.fromName,
+            reply_to: 'obispado@ejemplo.com'
         };
         
         console.log('📋 Parámetros enviados:', templateParams);
+        console.log('🔍 Verificación de parámetros críticos:');
+        console.log('  - to_email:', templateParams.to_email);
+        console.log('  - email:', templateParams.email);
+        console.log('  - user_email:', templateParams.user_email);
+        console.log('  - to_name:', templateParams.to_name);
         
         // Enviar email usando EmailJS
         const result = await emailjs.send(
