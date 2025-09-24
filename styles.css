@@ -5,34 +5,61 @@
     box-sizing: border-box;
 }
 
-/* Variables CSS para el tema del obispado */
+/* Variables CSS para La Iglesia de Jesucristo de los Santos de los Últimos Días */
 :root {
-    --color-primario: #8B4513;      /* Marrón del obispado */
-    --color-secundario: #D4AF37;    /* Dorado litúrgico */
-    --color-fondo: #F5F5DC;         /* Beige suave */
-    --color-texto: #333;
-    --color-texto-claro: #666;
+    --color-primario: #0F2A44;      /* Azul oficial de la Iglesia */
+    --color-secundario: #1F5582;    /* Azul claro complementario */
+    --color-acento: #D4AF37;        /* Dorado para acentos especiales */
+    --color-fondo: #F8F9FA;         /* Blanco cálido */
+    --color-fondo-secundario: #E8F4FD; /* Azul muy claro */
+    --color-texto: #2C3E50;         /* Azul oscuro para texto */
+    --color-texto-claro: #546E7A;   /* Gris azulado */
+    --color-blanco: #FFFFFF;
+    --color-success: #27AE60;       /* Verde para confirmaciones */
+    --color-warning: #F39C12;       /* Naranja para advertencias */
+    --color-error: #E74C3C;         /* Rojo para errores */
 }
 
 body {
-    font-family: 'Georgia', 'Times New Roman', serif;
-    background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
+    font-family: 'Source Sans Pro', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 50%, var(--color-fondo-secundario) 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
     color: var(--color-texto);
+    position: relative;
+}
+
+/* Patrón sutil de fondo inspirado en los templos */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 2px, transparent 2px),
+        radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 60px 60px, 40px 40px;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .container {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    background: var(--color-blanco);
+    border-radius: 20px;
+    box-shadow: 
+        0 20px 40px rgba(15, 42, 68, 0.15),
+        0 5px 15px rgba(15, 42, 68, 0.08);
     padding: 40px;
     width: 100%;
     max-width: 600px;
     position: relative;
+    border: 1px solid rgba(15, 42, 68, 0.08);
+    backdrop-filter: blur(10px);
 }
 
 /* Navegación superior */
@@ -47,41 +74,62 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 15px;
-    background: rgba(212, 175, 55, 0.1);
+    padding: 10px 16px;
+    background: rgba(15, 42, 68, 0.05);
     color: var(--color-primario);
     text-decoration: none;
-    border-radius: 20px;
+    border-radius: 25px;
     font-size: 0.9rem;
-    font-weight: bold;
+    font-weight: 600;
     transition: all 0.3s ease;
-    border: 1px solid rgba(139, 69, 19, 0.2);
+    border: 1px solid rgba(15, 42, 68, 0.15);
+    backdrop-filter: blur(5px);
 }
 
 .btn-back:hover {
-    background: var(--color-secundario);
-    color: white;
+    background: var(--color-primario);
+    color: var(--color-blanco);
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(139, 69, 19, 0.2);
+    box-shadow: 0 8px 20px rgba(15, 42, 68, 0.25);
 }
 
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
     margin-top: 20px;
+    position: relative;
+}
+
+/* Decoración superior inspirada en arquitectura del templo */
+header::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primario), var(--color-acento), var(--color-primario));
+    border-radius: 2px;
 }
 
 header h1 {
     color: var(--color-primario);
-    margin-bottom: 10px;
-    font-size: 2.2em;
-    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 2.4em;
+    font-weight: 700;
+    font-family: 'Georgia', serif;
+    letter-spacing: -0.5px;
+    position: relative;
 }
 
 header p {
     color: var(--color-texto-claro);
     font-size: 1.1em;
-    font-style: italic;
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 /* Pantalla de bienvenida */
@@ -156,23 +204,42 @@ header p {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px 40px;
+    background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
+    color: var(--color-blanco);
+    padding: 18px 35px;
     border: none;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: bold;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    box-shadow: 0 8px 25px rgba(15, 42, 68, 0.25);
+    text-transform: none;
+    letter-spacing: 0.3px;
+    font-family: 'Source Sans Pro', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
 }
 
 .btn-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 15px 35px rgba(15, 42, 68, 0.35);
+    background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
 }
 
 .btn-primary:active {
@@ -357,6 +424,124 @@ textarea {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* =====================================================
+   ESTILOS PARA INFORMACIÓN DE HORARIOS OFICIALES
+   ===================================================== */
+
+.info-horarios {
+    background: linear-gradient(135deg, var(--color-fondo-secundario), var(--color-blanco));
+    border: 2px solid var(--color-primario);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 25px 0;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(15, 42, 68, 0.1);
+}
+
+.info-horarios::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--color-primario), var(--color-acento), var(--color-primario));
+    border-radius: 15px;
+    z-index: -1;
+    opacity: 0.1;
+}
+
+.info-horarios h3 {
+    color: var(--color-primario);
+    font-family: 'Georgia', serif;
+    font-size: 1.4em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.info-horarios h3::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: var(--color-acento);
+    border-radius: 1px;
+}
+
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.horario-item {
+    background: var(--color-blanco);
+    border: 1px solid rgba(15, 42, 68, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.horario-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(15, 42, 68, 0.05), transparent);
+    transition: left 0.5s;
+}
+
+.horario-item:hover::before {
+    left: 100%;
+}
+
+.horario-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(15, 42, 68, 0.15);
+    border-color: var(--color-primario);
+}
+
+.horario-item strong {
+    display: block;
+    color: var(--color-primario);
+    font-family: 'Georgia', serif;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.horario-item span {
+    color: var(--color-texto);
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.horarios-nota {
+    background: rgba(15, 42, 68, 0.05);
+    border-left: 4px solid var(--color-primario);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 15px;
+}
+
+.horarios-nota small {
+    color: var(--color-texto-claro);
+    font-style: italic;
+    font-size: 0.9em;
+    line-height: 1.4;
 }
 
 /* =====================================================
